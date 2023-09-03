@@ -1,6 +1,8 @@
 # earthly-raspi-packer
 Take the pain out of bootstrapping Arch Linux ARM on Raspberry Pi.
 
+## It's nowhere near production-ready and just scratches my own itch. Caveat emptor!
+
 This is an [Earthly](https://earthly.dev/faq) pipeline that:
 - Spins up an Alpine VM
 - Downloads and extracts the Arch Linux ARM rootfs
@@ -18,6 +20,17 @@ Further to this, a script is added that allows for further customisation as part
 - Bringing software up to date
 - Installing an AUR package manager
 
+In addition, it would be nice if I could have everything configured just the way I want 
+from the get go and be able to smoke test the basics without needing actual hardware.
+
+- To that end, I started working on figuring out getting it to boot inside of QEMU.
+- This is probably going to eventually be fine if I can get it running on the WSL host first.
+- Making it nicely work within Earthly may be a bit more of a challenge, though.
+
+# This is a solved problem
+I tried a few other alternatives, but they didn't fit my needs or had attributes I didn't 
+like much. That's okay - why not teach myself something? 
+
 # Why?
 If you have a Linux box already (WSL is fine), sure you can follow the [ten step caveated process](https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-4).
 But, then you have to: 
@@ -30,12 +43,3 @@ But, then you have to:
 Repeat ad-infinitum every time you make a mistake, want to try something else... what a pain.
 I am of course aware that solutions such as USB-booting, backups, and SSH exist so you can ease some of this. 
 I think computers ought to be nicer than that, even for "technical people" who choose Arch.
-
-# This is a solved problem
-I tried a few other alternatives, but they didn't fit my needs or had attributes I didn't 
-like much. That's okay - why not teach myself something? 
-
-In addition, it would be nice if I could have everything configured just the way I want 
-from the get go and be able to smoke test the basics without needing actual hardware.
-
-It's nowhere near production-ready and just scratches my own itch. Caveat emptor!
