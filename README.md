@@ -1,6 +1,22 @@
 # earthly-raspi-packer
 Take the pain out of bootstrapping Arch Linux ARM on Raspberry Pi.
 
+# Why? This is a solved problem
+If you have a Linux box already (WSL is fine), sure you can follow the [ten step caveated process](https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-4).
+But, then you have to: 
+- dissassemble your device, since if you're me you have it in a case with a screen.
+- use your arthritic fingers that don't want to cooperate to get the tiny SD card out.
+- Burn the image on to the card (don't forget to check it!)
+- Get it back into the hardware and reassemble
+- Boot, set *everything* up again and hope you don't get yourself into a mess.
+
+Repeat ad-infinitum every time you make a mistake, want to try something else... what a pain.
+I am of course aware that solutions such as USB-booting, backups, and SSH exist so you can ease some of this. 
+I think computers ought to be nicer than that, even for "technical people" who choose Arch.
+
+I tried a few other alternatives, but they didn't fit my needs or had attributes I didn't 
+like much. That's okay - why not teach myself something? 
+
 ## It's nowhere near production-ready and just scratches my own itch. Caveat emptor!
 
 This is an [Earthly](https://earthly.dev/faq) pipeline that:
@@ -26,20 +42,3 @@ from the get go and be able to smoke test the basics without needing actual hard
 - To that end, I started working on figuring out getting it to boot inside of QEMU.
 - This is probably going to eventually be fine if I can get it running on the WSL host first.
 - Making it nicely work within Earthly may be a bit more of a challenge, though.
-
-# This is a solved problem
-I tried a few other alternatives, but they didn't fit my needs or had attributes I didn't 
-like much. That's okay - why not teach myself something? 
-
-# Why?
-If you have a Linux box already (WSL is fine), sure you can follow the [ten step caveated process](https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-4).
-But, then you have to: 
-- dissassemble your device, since if you're me you have it in a case with a screen.
-- use your arthritic fingers that don't want to cooperate to get the tiny SD card out.
-- Burn the image on to the card (don't forget to check it!)
-- Get it back into the hardware and reassemble
-- Boot, set *everything* up again and hope you don't get yourself into a mess.
-
-Repeat ad-infinitum every time you make a mistake, want to try something else... what a pain.
-I am of course aware that solutions such as USB-booting, backups, and SSH exist so you can ease some of this. 
-I think computers ought to be nicer than that, even for "technical people" who choose Arch.
