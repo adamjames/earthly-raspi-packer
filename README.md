@@ -1,7 +1,20 @@
 # earthly-raspi-packer
 Take the pain out of bootstrapping Arch Linux ARM on Raspberry Pi.
 
-# Why? This is a solved problem
+This is an [Earthly](https://earthly.dev/faq) pipeline that:
+- Spins up an Alpine VM
+- Downloads and extracts the Arch Linux ARM rootfs
+- Creates a disk image
+- Creates a file system and mounts it
+- Copies the operating system and bootloader into the image
+- Creates an image that can be written to an SD card
+
+In addition, it would be nice if I could have everything configured just the way I want 
+from the get go and be able to smoke test the basics without needing actual hardware.
+
+### It's nowhere near production-ready and just scratches my own itch.
+
+### Why? This is a solved problem
 If you have a Linux box already (WSL is fine), sure you can follow the [ten step caveated process](https://archlinuxarm.org/platforms/armv8/broadcom/raspberry-pi-4).
 But, then you have to: 
 - dissassemble your device, since if you're me you have it in a case with a screen.
@@ -17,15 +30,11 @@ I think computers ought to be nicer than that, even for "technical people" who c
 I tried a few other alternatives, but they didn't fit my needs or had attributes I didn't 
 like much. That's okay - why not teach myself something? 
 
-## It's nowhere near production-ready and just scratches my own itch. Caveat emptor!
+### Current status
+The latest commit on master is probably broken.  Caveat emptor!
 
-This is an [Earthly](https://earthly.dev/faq) pipeline that:
-- Spins up an Alpine VM
-- Downloads and extracts the Arch Linux ARM rootfs
-- Creates a disk image
-- Creates a file system and mounts it
-- Copies the operating system and bootloader into the image
-- Creates an image that can be written to an SD card
+There are incompatibilities whereby loopback mounts/chroots don't play nicely with Podman/Docker
+so I started working on figuring out getting it to boot inside of QEMU. 
 
 Further to this, a script is added that allows for further customisation as part of the first boot:
 - Importing SSH keys from Github (using a personal access token and the Github API)
@@ -35,10 +44,4 @@ Further to this, a script is added that allows for further customisation as part
 - Initialising the Pacman keyring
 - Bringing software up to date
 - Installing an AUR package manager
-
-In addition, it would be nice if I could have everything configured just the way I want 
-from the get go and be able to smoke test the basics without needing actual hardware.
-
-- To that end, I started working on figuring out getting it to boot inside of QEMU.
 - This is probably going to eventually be fine if I can get it running on the WSL host first.
-- Making it nicely work within Earthly may be a bit more of a challenge, though.
