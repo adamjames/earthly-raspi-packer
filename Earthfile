@@ -1,5 +1,3 @@
-# Earthfile
-
 VERSION 0.7
 FROM --platform=linux/arm/v7 alpine:latest
 WORKDIR /build
@@ -10,68 +8,55 @@ start:
 
 get-image:
     FROM +start
+    # Download the latest Arch Linux ARM image
     RUN wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-armv7-latest.tar.gz
-    SAVE ARTIFACT ArchLinuxARM-rpi-armv7-latest.tar.gz
+    SAVE ARTIFACT ArchLinuxARM-rpi-armv7-latest.tar.gz AS LOCAL output/ArchLinuxARM-rpi-armv7-latest.tar.gz
 
-prepare-disk:
-    RUN apk add e2fsprogs
-    RUN dd if=/dev/zero of=/arch-disk.img bs=1M count=4096
-    RUN mkfs.ext4 /arch-disk.img
-    RUN mkdir /mnt/disk
-    RUN --privileged mount -o loop /arch-disk.img /mnt/disk
+extract-image:
     COPY +get-image/ArchLinuxARM-rpi-armv7-latest.tar.gz .
-    RUN tar -xzf ArchLinuxARM-rpi-armv7-latest.tar.gz -C /mnt/disk
-    SAVE ARTIFACT /arch-disk.img
+    # Install necessary packages
+    RUN apk add libarchive-tools
 
+    # bsdtar is normally recommended, but spams errors
+    # about extended attributes on alpine.
+    RUN tar -xzf ArchLinuxARM-rpi-armv7-latest.tar.gz \
+        && rm ArchLinuxARM-rpi-armv7-latest.tar.gz
 
 prepare-root:
-    # Pass in customization args
+    FROM +extract-image
+    # Prepare our customisation script
+    COPY customise.sh /build/root/customise.sh
+    RUN chmod +x /build/root/customise.sh
+
+customise:
+    FROM +prepare-root
+    # Pass in customisation args
     ARG HOSTNAME
     ARG GITHUB_ACCESS_TOKEN
     ARG CUSTOM_USER
-    ARG INITIAL_PASSWORD
     ARG DISABLE_ROOT
     ARG REMOVE_ALARM
-    ENV PARAMS="HOSTNAME GITHUB_ACCESS_TOKEN CUSTOM_USER INITIAL_PASSWORD DISABLE_ROOT REMOVE_ALARM"
-    FROM +prepare-disk
 
-    # Install jq for safer JSON handling
-    RUN apk add jq
+    # Move into the prepared environment, customise it, and exit
+    RUN apk add arch-install-scripts
+    RUN --privileged arch-chroot /build /bin/bash -c "HOSTNAME=$HOSTNAME \
+        GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN \
+        ADD_USER=$ADD_USER \
+        DISABLE_ROOT=$DISABLE_ROOT \
+        REMOVE_ALARM=$REMOVE_ALARM \
+        CUSTOM_USER=$CUSTOM_USER root/customise.sh;
+        exit" 
+        
+pack:
+    FROM +customise
+    RUN dd if=/dev/zero of=arch-linux-pi.img bs=1M count=4096 && \
+        mkfs.ext4 arch-linux-pi.img && \
+        mkdir mnt && \
+        mount -o loop arch-linux-pi.img mnt && \
+        cp -a root/* mnt/ && \
+        umount mnt
 
-    # Dynamically generate the JSON file based on existing environment variables
-    RUN JSON_OBJ="{}"; \
-      ALL_VALID=true; \
-      for var in $PARAMS; do \
-          value=$(eval echo \$$var); \
-          if [ -z "$value" ]; then \
-              echo "Error: $var is not set"; \
-              ALL_VALID=false; \
-              break; \
-          fi; \
-          JSON_OBJ=$(echo $JSON_OBJ | jq --arg key $var --arg value "$value" '. + {($key): $value}'); \
-      done; \
-      \
-      if [ "$ALL_VALID" = true ]; then \
-          echo $JSON_OBJ > /mnt/disk/boot/setup_params.json; \
-      else \
-          echo "One or more required parameters are not set. Aborting."; \
-          exit 1; \
-      fi``
-
-    # Copy the init script that will run on the first boot of the Raspberry Pi
-    COPY init-once.sh /mnt/disk/root/init-once.sh
-    RUN chmod +x /mnt/disk/root/init-once.sh
-    RUN echo "/root/init-once.sh" >> /mnt/disk/etc/rc.local
-    COPY automate.exp /mnt/disk/root/automate.exp
-    RUN chmod +x /mnt/disk/root/automate.exp
-    SAVE ARTIFACT /arch-disk.img AS LOCAL arch-disk.img
-
-test:
-    ARG CUSTOM_USER
-    ARG INITIAL_PASSWORD 
-    FROM debian:bullseye-slim
-    COPY arch-disk.img .
-    RUN apt-get update -y && apt-get install -y qemu-system-arm qemu-utils expect
-    COPY automate.exp .
-    RUN chmod +x automate.exp
-    RUN expect automate.exp $CUSTOM_USER $INITIAL_PASSWORD || (echo "Expect script failed"; exit 1)
+export:
+    FROM +pack
+    ARG HOSTNAME
+    SAVE ARTIFACT arch-linux-pi.img AS LOCAL arch-linux-pi.img
