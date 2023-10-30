@@ -6,5 +6,5 @@ sudo earthly -i --allow-privileged \
 --build-arg INITIAL_PASSWORD=changeme1! \
 --build-arg DISABLE_ROOT=true \
 --build-arg REMOVE_ALARM=true \
---build-arg HOSTNAME=arrpi \
+--build-arg HOSTNAME=armpi \
 +test
